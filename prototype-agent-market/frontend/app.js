@@ -1,4 +1,4 @@
-const API = 'http://172.30.248.228:8000';
+const API = 'https://abe38d7e8d1f5d.lhr.life';
 
 const el = {
   collections: document.getElementById('collections'),
