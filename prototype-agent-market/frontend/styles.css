@@ -1,0 +1,14 @@
+body { font-family: Inter, system-ui, sans-serif; background: #0b1020; color: #eef2ff; margin: 0; padding: 0 20px 40px; }
+header { padding: 24px 0 8px; }
+h1 { margin: 0; }
+.panel { background: #111936; border: 1px solid #26335a; border-radius: 14px; padding: 16px; margin: 12px 0; }
+.filters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+input, select, button { background: #0f1730; color: #eef2ff; border: 1px solid #334374; border-radius: 8px; padding: 10px; }
+button { cursor: pointer; }
+main { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.card { background: #0d1531; border: 1px solid #2f3e6b; border-radius: 10px; padding: 12px; }
+.small { color: #9fb0df; font-size: 12px; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #22356a; display: inline-block; margin-right: 6px; }
+.price { font-weight: 700; margin: 8px 0; }
+@media (max-width: 900px) { .filters { grid-template-columns: 1fr 1fr; } main { grid-template-columns: 1fr; }}

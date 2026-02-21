@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenClaw Agent Market Prototype</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>OpenClaw Agent Market</h1>
+      <p>OpenSea 벤치마크형 에이전트/스킬 마켓 프로토타입</p>
+    </header>
+
+    <section class="panel" id="collections"></section>
+
+    <section class="panel filters">
+      <input id="q" placeholder="스킬 검색" />
+      <select id="category">
+        <option value="">전체 카테고리</option>
+        <option value="development">development</option>
+        <option value="planning">planning</option>
+        <option value="qa">qa</option>
+      </select>
+      <select id="verified">
+        <option value="">검증 상태 전체</option>
+        <option value="compatibility">compatibility</option>
+        <option value="basic">basic</option>
+        <option value="unverified">unverified</option>
+      </select>
+      <select id="sort">
+        <option value="popular">인기순</option>
+        <option value="rating">평점순</option>
+        <option value="price_asc">가격낮은순</option>
+        <option value="price_desc">가격높은순</option>
+      </select>
+      <button id="searchBtn">검색</button>
+    </section>
+
+    <main>
+      <section class="panel">
+        <h2>Skills</h2>
+        <div id="skills" class="grid"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Agents</h2>
+        <div id="agents" class="grid"></div>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
