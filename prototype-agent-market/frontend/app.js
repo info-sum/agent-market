@@ -1,4 +1,4 @@
-const API = 'http://localhost:8000';
+const API = 'http://172.30.248.228:8000';
 
 const el = {
   collections: document.getElementById('collections'),
