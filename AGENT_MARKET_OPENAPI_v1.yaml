@@ -1,0 +1,235 @@
+openapi: 3.0.3
+info:
+  title: Agent Market API
+  version: 1.0.0
+servers:
+  - url: https://api.agent-market.local
+security:
+  - bearerAuth: []
+paths:
+  /api/connections:
+    get:
+      summary: List user OpenClaw connections
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create OpenClaw connection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConnectionReq'
+      responses:
+        '201':
+          description: Created
+  /api/connections/{id}/test:
+    post:
+      summary: Test connection
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Connection healthy
+        '400':
+          description: Invalid token/endpoint
+  /api/connections/{id}/rotate:
+    post:
+      summary: Rotate connection token
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Rotated
+  /api/products:
+    get:
+      summary: List products
+      parameters:
+        - in: query
+          name: type
+          schema: { type: string, enum: [skill, md, persona] }
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductReq'
+      responses:
+        '201': { description: Created }
+  /api/products/{id}:
+    get:
+      summary: Get product detail
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: OK }
+        '404': { description: Not found }
+  /api/products/{id}/versions:
+    post:
+      summary: Add product version
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVersionReq'
+      responses:
+        '201': { description: Created }
+  /api/orders:
+    post:
+      summary: Create order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderReq'
+      responses:
+        '201': { description: Created }
+  /api/orders/{id}/pay:
+    post:
+      summary: Mark order paid (webhook/confirm)
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: Paid }
+  /api/installations:
+    post:
+      summary: Install product to OpenClaw
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInstallationReq'
+      responses:
+        '202': { description: Accepted }
+    get:
+      summary: List installations
+      responses:
+        '200': { description: OK }
+  /api/installations/{id}/rollback:
+    post:
+      summary: Roll back installation
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: Rolled back }
+  /api/reviews:
+    post:
+      summary: Create review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewReq'
+      responses:
+        '201': { description: Created }
+  /api/admin/review-queue:
+    get:
+      summary: List pending version reviews
+      responses:
+        '200': { description: OK }
+  /api/admin/reviews/{id}/approve:
+    post:
+      summary: Approve version
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200': { description: Approved }
+  /api/admin/reviews/{id}/reject:
+    post:
+      summary: Reject version
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        '200': { description: Rejected }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    CreateConnectionReq:
+      type: object
+      required: [name, endpoint, token, scopes]
+      properties:
+        name: { type: string }
+        endpoint: { type: string }
+        token: { type: string }
+        scopes:
+          type: array
+          items: { type: string }
+    CreateProductReq:
+      type: object
+      required: [type, title, description, price]
+      properties:
+        type: { type: string, enum: [skill, md, persona] }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        price: { type: number }
+        currency: { type: string, default: KRW }
+        license: { type: string, default: personal }
+    CreateVersionReq:
+      type: object
+      required: [version, packageUrl, checksumSha256, changelog]
+      properties:
+        version: { type: string, example: 1.0.0 }
+        packageUrl: { type: string }
+        checksumSha256: { type: string }
+        changelog: { type: string }
+    CreateOrderReq:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required: [productId, versionId]
+            properties:
+              productId: { type: string, format: uuid }
+              versionId: { type: string, format: uuid }
+    CreateInstallationReq:
+      type: object
+      required: [connectionId, productId, versionId]
+      properties:
+        connectionId: { type: string, format: uuid }
+        productId: { type: string, format: uuid }
+        versionId: { type: string, format: uuid }
+    CreateReviewReq:
+      type: object
+      required: [productId, rating]
+      properties:
+        productId: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        content: { type: string }
