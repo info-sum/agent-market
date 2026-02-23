@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Market Prototype</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #111834;
+      --card-2: #0f1530;
+      --line: rgba(255,255,255,.12);
+      --text: #eaf0ff;
+      --muted: #9fb0e8;
+      --primary: #7c8cff;
+      --primary-2: #52d4ff;
+      --ok: #32d296;
+      --danger: #ff6b8a;
+      --shadow: 0 14px 30px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 500px at 10% -10%, rgba(124,140,255,.2), transparent 60%),
+        radial-gradient(1000px 600px at 90% -30%, rgba(82,212,255,.18), transparent 50%),
+        var(--bg);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 24px; }
+    .hero {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 18px;
+    }
+    .title { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
+    .subtitle { color: var(--muted); margin: 6px 0 0; }
+    .pill {
+      border: 1px solid var(--line); padding: 8px 12px; border-radius: 999px;
+      background: rgba(255,255,255,.04); color: var(--muted); font-size: 12px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .card {
+      background: linear-gradient(160deg, var(--card), var(--card-2));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    h3 { margin: 0 0 10px; font-size: 16px; }
+    .muted { color: var(--muted); font-size: 12px; margin: 0 0 10px; }
+    input, select, button {
+      width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line);
+      background: rgba(255,255,255,.03); color: var(--text); margin: 6px 0;
+    }
+    input::placeholder { color: #8192c8; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button {
+      border: 0;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+    ul { margin: 8px 0 0; padding-left: 18px; }
+    li { margin: 6px 0; color: #d8e1ff; }
+    .ok { color: var(--ok); }
+    .danger { color: var(--danger); }
+    pre {
+      background: rgba(0,0,0,.25);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      overflow: auto;
+      min-height: 120px;
+      color: #c5d4ff;
+      margin: 0;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1 class="title">Agent Market Prototype</h1>
+        <p class="subtitle">보안 로그인 + OpenClaw 연결 + 상품 설치 흐름</p>
+      </div>
+      <div class="pill" id="authBadge">로그인 필요</div>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h3>1) 인증</h3>
+        <p class="muted">JWT 토큰 기반. register/login 후 보호 API 접근 가능</p>
+        <input id="email" placeholder="email" value="demo@agent.market" />
+        <input id="password" type="password" placeholder="password (8자 이상)" value="password123" />
+        <input id="displayName" placeholder="display name (register 시)" value="Demo User" />
+        <div class="row">
+          <button onclick="register()">회원가입</button>
+          <button class="secondary" onclick="login()">로그인</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>2) OpenClaw 연결</h3>
+        <p class="muted">로그인 후 내 연결만 조회/생성됩니다.</p>
+        <input id="connName" placeholder="연결 이름" value="my-openclaw" />
+        <input id="connEndpoint" placeholder="endpoint" value="http://localhost:18789" />
+        <button onclick="createConnection()">연결 추가</button>
+        <ul id="connList"></ul>
+      </section>
+
+      <section class="card">
+        <h3>3) 상품</h3>
+        <p class="muted">마켓 상품 조회 + 커스텀 상품 추가</p>
+        <div class="row">
+          <input id="productTitle" placeholder="상품명" value="UI-UX Pro Pack" />
+          <input id="productPrice" placeholder="가격" type="number" value="79" />
+        </div>
+        <select id="productType">
+          <option value="skill">skill</option>
+          <option value="md">md</option>
+          <option value="persona">persona</option>
+        </select>
+        <button onclick="createProduct()">상품 추가</button>
+        <button class="secondary" onclick="loadProducts()">목록 새로고침</button>
+        <ul id="productList"></ul>
+      </section>
+
+      <section class="card">
+        <h3>4) 설치 실행</h3>
+        <p class="muted">선택한 연결에 상품 설치(프로토타입 success 처리)</p>
+        <select id="installConn"></select>
+        <select id="installProduct"></select>
+        <button onclick="installProduct()">설치</button>
+        <ul id="installList"></ul>
+      </section>
+
+      <section class="card" style="grid-column: 1 / -1;">
+        <h3>시스템 상태</h3>
+        <pre id="status"></pre>
+      </section>
+    </div>
+  </div>
+
+<script>
+const API = 'http://localhost:8000/api/v1';
+let TOKEN = localStorage.getItem('am_token') || '';
+
+function setBadge(text, ok=true){
+  const badge = document.getElementById('authBadge');
+  badge.textContent = text;
+  badge.style.color = ok ? '#9ff3cf' : '#ff9db3';
+}
+
+function headers(){
+  const h = {'Content-Type':'application/json'};
+  if (TOKEN) h['Authorization'] = `Bearer ${TOKEN}`;
+  return h;
+}
+
+async function api(path, opt={}) {
+  const res = await fetch(API + path, { headers: headers(), ...opt });
+  const raw = await res.text();
+  let body = raw;
+  try { body = raw ? JSON.parse(raw) : {}; } catch {}
+  if(!res.ok) throw new Error(typeof body === 'string' ? body : JSON.stringify(body));
+  return body;
+}
+
+async function register(){
+  try {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const display_name = document.getElementById('displayName').value;
+    const out = await api('/auth/register', {method:'POST', body: JSON.stringify({email, password, display_name})});
+    TOKEN = out.token.access_token;
+    localStorage.setItem('am_token', TOKEN);
+    setBadge(`로그인됨: ${out.user.email}`);
+    await refreshAll();
+  } catch(e){ status(String(e), false); }
+}
+
+async function login(){
+  try {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const out = await api('/auth/login', {method:'POST', body: JSON.stringify({email, password})});
+    TOKEN = out.token.access_token;
+    localStorage.setItem('am_token', TOKEN);
+    setBadge(`로그인됨: ${out.user.email}`);
+    await refreshAll();
+  } catch(e){ status(String(e), false); }
+}
+
+async function refreshAll(){
+  try {
+    const health = await fetch('http://localhost:8000/api/v1/health').then(r=>r.json());
+    const products = await api('/products');
+    document.getElementById('productList').innerHTML = products.map(p=>`<li>${p.title} <span class="muted">(${p.type})</span> - $${p.price}</li>`).join('');
+
+    if (!TOKEN){
+      document.getElementById('connList').innerHTML = '<li class="danger">로그인 필요</li>';
+      document.getElementById('installList').innerHTML = '';
+      document.getElementById('installConn').innerHTML = '';
+      document.getElementById('installProduct').innerHTML = products.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
+      status(JSON.stringify(health, null, 2));
+      setBadge('로그인 필요', false);
+      return;
+    }
+
+    const [me, connections, installs] = await Promise.all([
+      api('/auth/me'), api('/connections'), api('/installations')
+    ]);
+    setBadge(`로그인됨: ${me.email}`);
+
+    document.getElementById('connList').innerHTML = connections.map(c=>`<li>${c.name} (${c.endpoint})</li>`).join('') || '<li class="muted">연결 없음</li>';
+    document.getElementById('installList').innerHTML = installs.map(i=>`<li class="ok">${i.status} - ${i.message || ''}</li>`).join('') || '<li class="muted">설치 이력 없음</li>';
+
+    document.getElementById('installConn').innerHTML = connections.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    document.getElementById('installProduct').innerHTML = products.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
+
+    status(JSON.stringify({health, me, counts:{connections:connections.length, products:products.length, installs:installs.length}}, null, 2));
+  } catch(e){ status(String(e), false); }
+}
+
+async function createConnection(){
+  try {
+    const name = document.getElementById('connName').value;
+    const endpoint = document.getElementById('connEndpoint').value;
+    await api('/connections', {method:'POST', body: JSON.stringify({name, endpoint, scopes:['read','install']})});
+    await refreshAll();
+  } catch(e){ status(String(e), false); }
+}
+
+async function createProduct(){
+  try {
+    const title = document.getElementById('productTitle').value;
+    const price = Number(document.getElementById('productPrice').value || 0);
+    const type = document.getElementById('productType').value;
+    await api('/products', {method:'POST', body: JSON.stringify({type, title, description:'trend pack', price})});
+    await refreshAll();
+  } catch(e){ status(String(e), false); }
+}
+
+async function loadProducts(){ await refreshAll(); }
+
+async function installProduct(){
+  try {
+    const connection_id = document.getElementById('installConn').value;
+    const product_id = document.getElementById('installProduct').value;
+    await api('/installations', {method:'POST', body: JSON.stringify({connection_id, product_id})});
+    await refreshAll();
+  } catch(e){ status(String(e), false); }
+}
+
+function status(message, ok=true){
+  document.getElementById('status').textContent = message;
+  document.getElementById('status').style.color = ok ? '#c5d4ff' : '#ff9db3';
+}
+
+refreshAll();
+</script>
+</body>
+</html>
